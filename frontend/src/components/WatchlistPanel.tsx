@@ -142,16 +142,21 @@ export default function WatchlistPanel() {
 
       {/* Dynamic Tab Content */}
       {activeTab === "dynamic" && data?.dynamic && (
-        <div className="max-h-28 overflow-y-auto">
-          <div className="flex flex-wrap gap-1">
-            {data.dynamic.all.map((stock) => (
-              <span
-                key={stock}
-                className="px-1.5 py-0.5 text-xs font-medium rounded bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-              >
-                {stock}
-              </span>
-            ))}
+        <div>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+            S&P 500 + NASDAQ 100 중 시총 $500M↑, 거래량 50K↑, 주가 $5↑
+          </p>
+          <div className="max-h-24 overflow-y-auto">
+            <div className="flex flex-wrap gap-1">
+              {data.dynamic.all.map((stock) => (
+                <span
+                  key={stock}
+                  className="px-1.5 py-0.5 text-xs font-medium rounded bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                >
+                  {stock}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       )}
