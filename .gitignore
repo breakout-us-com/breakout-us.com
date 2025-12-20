@@ -1,0 +1,31 @@
+# Python
+/.venv/
+/backend/venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+.next/
+
+# Environment (민감 정보)
+.env
+.env.local
+!.env.example
+
+# SSL 인증서
+*.pem
+*.p12
+/ssl/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+/.idea/

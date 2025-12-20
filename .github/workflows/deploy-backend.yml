@@ -1,0 +1,64 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'ecosystem.config.js'
+
+jobs:
+  deploy:
+    name: Deploy Backend to Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy Backend
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          set -e
+
+          DEPLOY_PATH="/var/www/breakout-us.com"
+
+          echo "=========================================="
+          echo "Deploying Backend..."
+          echo "=========================================="
+
+          cd "$DEPLOY_PATH"
+
+          # Pull latest code
+          git fetch origin
+          git reset --hard origin/main
+
+          # Update Python dependencies
+          cd backend
+          source venv/bin/activate
+          pip install -r requirements.txt --quiet
+
+          # Restart backend
+          cd "$DEPLOY_PATH"
+
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm use 20
+
+          pm2 restart breakout-backend
+
+          echo "=========================================="
+          echo "Backend deployment completed!"
+          echo "=========================================="
+          EOF
+
+      - name: Health Check
+        run: |
+          echo "Waiting for backend to start..."
+          sleep 5
+          curl -k https://${{ secrets.SERVER_IP }}:8800/health || echo "Health check failed"
