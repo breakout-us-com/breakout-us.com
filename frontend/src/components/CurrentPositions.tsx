@@ -53,7 +53,18 @@ export default function CurrentPositions() {
         setLoading(false);
       })
       .catch(() => {
-        setData({ count: 0, positions: [], error: "Failed to fetch" });
+        setData({
+          count: 0,
+          winning: 0,
+          losing: 0,
+          total_invested: 0,
+          total_value: 0,
+          total_pnl_amount: 0,
+          total_pnl_pct: 0,
+          available_capital: 0,
+          positions: [],
+          error: "Failed to fetch"
+        });
         setLoading(false);
       });
   }, []);
