@@ -79,6 +79,7 @@ async def get_recent_signals(days: int = 7):
                 SELECT ticker, market, pattern, source, alert_date, alert_price, signal_data, sent_at
                 FROM alerts
                 WHERE alert_date >= CURRENT_DATE - INTERVAL '%s days'
+                  AND alert_date < CURRENT_DATE
                 ORDER BY alert_date DESC, sent_at DESC
             """, (days,))
             results = cursor.fetchall()
