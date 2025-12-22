@@ -17,10 +17,10 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-                O&apos;Neil Breakout
+                돌파매매 전략(Breakout Strategy)
               </h1>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                US Stock Trading Signals & Paper Trading
+                William O&apos;Neil의 돌파매매 전략에 의한 신호
               </p>
             </div>
             <MarketStatus />

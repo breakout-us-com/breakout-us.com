@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "O'Neil Breakout - US Stock Trading Signals",
-  description: "미국 주식 O'Neil Breakout 전략 실시간 모니터링 및 백테스트 결과",
+  title: "돌파매매 전략(Breakout Strategy) - William O'Neil",
+  description: "William O'Neil의 돌파매매 전략에 의한 미국 주식 신호 및 백테스트 결과",
   keywords: ["O'Neil", "Breakout", "Trading", "US Stocks", "CAN SLIM", "백테스트"],
 };
 

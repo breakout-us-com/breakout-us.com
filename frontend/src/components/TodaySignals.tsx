@@ -104,6 +104,11 @@ export default function TodaySignals() {
         <div>
           <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
             Today&apos;s Signals
+            {data?.date && (
+              <span className="text-base font-normal text-zinc-500 dark:text-zinc-400 ml-2">
+                ({data.date})
+              </span>
+            )}
           </h2>
           {data && (
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
