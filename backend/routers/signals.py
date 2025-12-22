@@ -3,11 +3,9 @@ from datetime import date, datetime
 from fastapi import APIRouter
 
 from .db import get_cursor
+from scanner import get_scanner
 
 router = APIRouter()
-
-# 마지막 스캔 시간 추적
-_last_scan_time: datetime | None = None
 
 
 @router.get("/signals/today")
@@ -108,3 +106,10 @@ async def get_recent_signals(days: int = 7):
             }
         except Exception as e:
             return {"signals": [], "count": 0, "error": str(e)}
+
+
+@router.get("/signals/scanner-status")
+async def get_scanner_status():
+    """백그라운드 스캐너 상태 조회"""
+    scanner = get_scanner()
+    return scanner.get_status()

@@ -2,10 +2,6 @@ import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-# 참조 코드 경로 추가
-REFERENCE_CODE_PATH = "/Users/pink-spider/Code/github/dev-minimalism/us-oneil-simple-breakout-notifier/src"
-sys.path.insert(0, REFERENCE_CODE_PATH)
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -14,13 +10,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers import watchlist, backtest, signals, paper_trading
 from routers.db import close_db_connection
+from scanner import get_scanner
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    scanner = get_scanner()
+    await scanner.start()
+
     yield
+
     # Shutdown
+    await scanner.stop()
     close_db_connection()
 
 
