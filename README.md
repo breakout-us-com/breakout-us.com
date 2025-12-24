@@ -276,12 +276,18 @@ breakout-us.com/
 │
 ├── backend/
 │   ├── main.py                 # FastAPI 앱
+│   ├── logging_config.py       # 로깅 설정 (KST 1일 롤링)
+│   ├── logs/                   # 로그 파일 디렉토리
 │   ├── routers/
 │   │   ├── watchlist.py        # 워치리스트 API
 │   │   ├── signals.py          # 시그널 API
 │   │   ├── paper_trading.py    # Paper Trading API
 │   │   ├── backtest.py         # 백테스트 API
 │   │   └── db.py               # DB 연결 관리
+│   ├── scanner/
+│   │   ├── background_scanner.py  # 백그라운드 스캐너
+│   │   ├── signal_storage.py      # 시그널 DB 저장
+│   │   └── market_status.py       # 마켓 상태 체크
 │   ├── screener/
 │   │   └── dynamic_screener.py # 동적 스크리너
 │   ├── detector/
@@ -299,7 +305,9 @@ breakout-us.com/
 │   │   │   └── page.tsx        # 메인 페이지
 │   │   ├── components/         # React 컴포넌트
 │   │   └── lib/
-│   │       └── config.ts       # API URL 설정
+│   │       ├── config.ts       # API URL 설정
+│   │       └── logger.ts       # 로깅 설정 (KST 1일 롤링)
+│   ├── logs/                   # 로그 파일 디렉토리
 │   └── package.json
 │
 ├── ecosystem.config.js         # PM2 설정
@@ -329,6 +337,41 @@ breakout-us.com/
 | 프리마켓 | 18:00 - 23:30 |
 | 정규장 | 23:30 - 06:00 |
 | 애프터마켓 | 06:00 - 10:00 |
+
+## 로깅
+
+백엔드/프론트엔드 모두 파일 로깅을 지원하며, 한국 시간(KST) 자정 기준으로 1일 롤링됩니다.
+
+### Backend (Python)
+
+| 로그 파일 | 내용 |
+|----------|------|
+| `backend/logs/api.log` | API 서버 로그 |
+| `backend/logs/scanner.log` | 스캐너/시그널 로그 |
+
+```python
+from logging_config import setup_logging
+
+logger = setup_logging("scanner")
+logger.info("Scan started")
+```
+
+### Frontend (Next.js)
+
+| 로그 파일 | 내용 |
+|----------|------|
+| `frontend/logs/frontend-YYYY-MM-DD.log` | 서버사이드 로그 |
+
+```typescript
+import logger from '@/lib/logger';
+
+logger.info('Request received');
+```
+
+### 로그 보관
+
+- 최대 30일간 보관
+- 롤링 시 `scanner.log.2025-12-24` 형식으로 백업
 
 ## 트레이딩 규칙
 

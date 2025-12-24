@@ -1,15 +1,32 @@
 """Signal storage operations for alerts table"""
 import json
-import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from routers.db import get_cursor
+import numpy as np
 
-logger = logging.getLogger(__name__)
+from routers.db import get_cursor
+from logging_config import setup_logging
+
+logger = setup_logging("scanner")
+
+
+def _convert_numpy_types(obj: Any) -> Any:
+    """Convert numpy types to Python native types for DB/JSON compatibility."""
+    if isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: _convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_convert_numpy_types(item) for item in obj]
+    return obj
 
 
 def save_signal(
@@ -41,18 +58,22 @@ def save_signal(
             return False
 
         try:
+            # Convert numpy types to native Python types
+            safe_price = _convert_numpy_types(alert_price)
+            safe_signal_data = _convert_numpy_types(signal_data) if signal_data else None
+
             cursor.execute("""
                 INSERT INTO alerts (ticker, market, pattern, source, alert_date, alert_price, signal_data)
                 VALUES (%s, %s, %s, %s, CURRENT_DATE, %s, %s)
-                ON CONFLICT (ticker, pattern, alert_date) DO NOTHING
+                ON CONFLICT (ticker, pattern, source, alert_date) DO NOTHING
                 RETURNING id
             """, (
                 ticker,
                 market,
                 pattern,
                 source,
-                alert_price,
-                json.dumps(signal_data) if signal_data else None
+                safe_price,
+                json.dumps(safe_signal_data) if safe_signal_data else None
             ))
 
             result = cursor.fetchone()
@@ -68,13 +89,14 @@ def save_signal(
             return False
 
 
-def has_alert_today(ticker: str, pattern: str) -> bool:
+def has_alert_today(ticker: str, pattern: str, source: str = "background_scanner") -> bool:
     """
     Check if alert already exists for today.
 
     Args:
         ticker: Stock ticker symbol
         pattern: Pattern type
+        source: Signal source identifier
 
     Returns:
         True if alert exists, False otherwise
@@ -86,9 +108,9 @@ def has_alert_today(ticker: str, pattern: str) -> bool:
         try:
             cursor.execute("""
                 SELECT 1 FROM alerts
-                WHERE ticker = %s AND pattern = %s AND alert_date = CURRENT_DATE
+                WHERE ticker = %s AND pattern = %s AND source = %s AND alert_date = CURRENT_DATE
                 LIMIT 1
-            """, (ticker, pattern))
+            """, (ticker, pattern, source))
 
             return cursor.fetchone() is not None
 

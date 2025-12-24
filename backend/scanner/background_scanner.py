@@ -1,6 +1,5 @@
 """Background scanner service for breakout detection"""
 import asyncio
-import logging
 import os
 import time
 from datetime import datetime, time as dt_time, timedelta
@@ -14,17 +13,13 @@ from detector.breakout_detector import BreakoutDetector
 from screener.dynamic_screener import DynamicScreener
 from routers.watchlist import load_dynamic_watchlist, ONEIL_WATCHLIST
 from routers.db import get_db_connection, is_connected
+from logging_config import setup_logging
 
 from .market_status import get_market_status, format_market_status_message
 from .signal_storage import save_signal, has_alert_today, get_today_signal_count
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
+# Configure logging with file rotation
+logger = setup_logging("scanner")
 
 # Configuration from environment
 SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "1800"))  # 30 min default
