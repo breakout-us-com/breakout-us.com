@@ -16,7 +16,7 @@ from routers.db import get_db_connection, is_connected
 from logging_config import setup_logging
 
 from .market_status import get_market_status, format_market_status_message
-from .signal_storage import save_signal, has_alert_today, get_today_signal_count
+from .signal_storage import save_signal, save_position, has_alert_today, get_today_signal_count
 
 # Configure logging with file rotation
 logger = setup_logging("scanner")
@@ -118,17 +118,19 @@ class BackgroundScanner:
                 scanned += 1
 
                 for signal in signals:
-                    # Save to database
+                    signal_data = {
+                        'resistance': signal.get('resistance'),
+                        'breakout_pct': signal.get('breakout_pct'),
+                        'volume_surge_pct': signal.get('volume_surge'),
+                    }
+
+                    # 1. Save to alerts table (signal record)
                     saved = save_signal(
                         ticker=signal['ticker'],
                         market='US',
                         pattern=signal['pattern'],
                         alert_price=signal['current_price'],
-                        signal_data={
-                            'resistance': signal.get('resistance'),
-                            'breakout_pct': signal.get('breakout_pct'),
-                            'volume_surge_pct': signal.get('volume_surge'),
-                        },
+                        signal_data=signal_data,
                         source='background_scanner'
                     )
 
@@ -139,6 +141,18 @@ class BackgroundScanner:
                             f"@ ${signal['current_price']:.2f} "
                             f"(+{signal['breakout_pct']:.1f}%, Vol +{signal['volume_surge']:.0f}%)"
                         )
+
+                        # 2. Save to positions table (Paper Trading)
+                        position_saved = save_position(
+                            ticker=signal['ticker'],
+                            market='US',
+                            pattern=signal['pattern'],
+                            entry_price=signal['current_price'],
+                            signal_data=signal_data,
+                            source='background_scanner'
+                        )
+                        if position_saved:
+                            logger.info(f"POSITION: {signal['ticker']} - Paper trading position opened")
 
                 # Rate limiting
                 time.sleep(SCAN_DELAY_PER_STOCK)

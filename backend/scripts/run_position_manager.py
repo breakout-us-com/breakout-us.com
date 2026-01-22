@@ -61,6 +61,7 @@ def close_position(
             return False
 
         try:
+            # Convert numpy types to native Python types
             cursor.execute("""
                 UPDATE positions
                 SET status = 'closed',
@@ -71,7 +72,13 @@ def close_position(
                     holding_days = %s,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s
-            """, (exit_price, exit_reason, profit_pct, holding_days, position_id))
+            """, (
+                float(exit_price),
+                str(exit_reason),
+                float(profit_pct),
+                int(holding_days),
+                int(position_id)
+            ))
             cursor.connection.commit()
             return True
         except Exception as e:
