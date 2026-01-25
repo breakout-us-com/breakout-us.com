@@ -19,6 +19,10 @@ interface Trade {
 
 interface TradesData {
   count: number;
+  win_count: number;
+  loss_count: number;
+  total_profit_amount: number;
+  portfolio_return_pct: number;
   trades: Trade[];
   error?: string;
 }
@@ -42,7 +46,15 @@ export default function TradingHistory() {
         setLoading(false);
       })
       .catch(() => {
-        setData({ count: 0, trades: [], error: "Failed to fetch" });
+        setData({
+          count: 0,
+          win_count: 0,
+          loss_count: 0,
+          total_profit_amount: 0,
+          portfolio_return_pct: 0,
+          trades: [],
+          error: "Failed to fetch"
+        });
         setLoading(false);
       });
   }, []);
@@ -62,10 +74,10 @@ export default function TradingHistory() {
     );
   }
 
-  // 통계 계산
-  const totalPnL = data?.trades.reduce((sum, t) => sum + t.profit_pct, 0) || 0;
-  const winCount = data?.trades.filter(t => t.profit_pct > 0).length || 0;
-  const lossCount = data?.trades.filter(t => t.profit_pct <= 0).length || 0;
+  // API에서 포트폴리오 수익률 사용
+  const portfolioReturn = data?.portfolio_return_pct || 0;
+  const winCount = data?.win_count || 0;
+  const lossCount = data?.loss_count || 0;
 
   return (
     <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6">
@@ -75,11 +87,11 @@ export default function TradingHistory() {
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full ${
-            totalPnL >= 0
+            portfolioReturn >= 0
               ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
               : "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
           }`}>
-            {totalPnL >= 0 ? "+" : ""}{totalPnL.toFixed(2)}%
+            {portfolioReturn >= 0 ? "+" : ""}{portfolioReturn.toFixed(2)}%
           </span>
           <span className="text-xs bg-zinc-100 dark:bg-zinc-700 px-2 py-1 rounded-full text-zinc-600 dark:text-zinc-300">
             <span className="text-green-600 dark:text-green-400">{winCount}W</span>

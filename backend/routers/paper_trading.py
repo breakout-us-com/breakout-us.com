@@ -175,7 +175,8 @@ async def get_closed_positions(limit: int = 50):
         try:
             cursor.execute("""
                 SELECT id, ticker, market, source, entry_price, entry_date, pattern,
-                       exit_price, exit_date, exit_reason, profit_pct, holding_days
+                       exit_price, exit_date, exit_reason, profit_pct, holding_days,
+                       investment_amount
                 FROM positions
                 WHERE status = 'closed'
                 ORDER BY exit_date DESC
@@ -184,12 +185,27 @@ async def get_closed_positions(limit: int = 50):
             results = cursor.fetchall()
 
             trades = []
+            total_profit_amount = 0
+            win_count = 0
+            loss_count = 0
+
             for r in results:
                 entry_date = r['entry_date']
                 exit_date = r['exit_date']
                 holding_days = r.get('holding_days') or (
                     (exit_date - entry_date).days if entry_date and exit_date else 0
                 )
+                profit_pct = float(r['profit_pct']) if r['profit_pct'] else 0
+                investment_amount = float(r['investment_amount']) if r['investment_amount'] else INITIAL_CAPITAL * POSITION_SIZE_PCT
+
+                # Calculate realized profit amount
+                profit_amount = investment_amount * profit_pct / 100
+                total_profit_amount += profit_amount
+
+                if profit_pct > 0:
+                    win_count += 1
+                else:
+                    loss_count += 1
 
                 trades.append({
                     "id": r['id'],
@@ -202,12 +218,20 @@ async def get_closed_positions(limit: int = 50):
                     "exit_date": exit_date.strftime("%Y-%m-%d") if exit_date else None,
                     "pattern": r['pattern'],
                     "exit_reason": r['exit_reason'],
-                    "profit_pct": float(r['profit_pct']) if r['profit_pct'] else 0,
+                    "profit_pct": profit_pct,
+                    "profit_amount": round(profit_amount, 2),
                     "holding_days": holding_days,
                 })
 
+            # Calculate portfolio return
+            portfolio_return_pct = (total_profit_amount / INITIAL_CAPITAL) * 100
+
             return {
                 "count": len(trades),
+                "win_count": win_count,
+                "loss_count": loss_count,
+                "total_profit_amount": round(total_profit_amount, 2),
+                "portfolio_return_pct": round(portfolio_return_pct, 2),
                 "trades": trades
             }
         except Exception as e:
