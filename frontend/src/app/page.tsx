@@ -7,6 +7,7 @@ import RecentSignals from "@/components/RecentSignals";
 import CurrentPositions from "@/components/CurrentPositions";
 import MonthlyPerformance from "@/components/MonthlyPerformance";
 import PaperTradingStats from "@/components/PaperTradingStats";
+import TradingHistory from "@/components/TradingHistory";
 
 export default function Home() {
   return (
@@ -56,7 +57,12 @@ export default function Home() {
           <MonthlyPerformance />
         </div>
 
-        {/* Row 6: Backtest Results (Historical Reference) */}
+        {/* Row 6: Trading History */}
+        <div className="mb-6">
+          <TradingHistory />
+        </div>
+
+        {/* Row 7: Backtest Results (Historical Reference) */}
         <details className="mb-8">
           <summary className="cursor-pointer text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-4 hover:text-zinc-900 dark:hover:text-white">
             Backtest Results (Historical Reference)

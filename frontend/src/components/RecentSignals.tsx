@@ -30,11 +30,6 @@ const PATTERN_COLORS: Record<string, string> = {
   "Pivot Breakout": "bg-orange-500",
 };
 
-const SOURCE_CONFIG: Record<string, { label: string; color: string }> = {
-  oneil: { label: "O'Neil", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300" },
-  dynamic: { label: "Dynamic", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300" },
-};
-
 export default function RecentSignals() {
   const [data, setData] = useState<SignalsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +49,7 @@ export default function RecentSignals() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6">
         <div className="animate-pulse">
           <div className="h-6 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3 mb-4"></div>
           <div className="space-y-2">
@@ -68,12 +63,12 @@ export default function RecentSignals() {
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+        <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">
           Latest Signals
         </h2>
-        <span className="text-sm text-zinc-500 dark:text-zinc-400">
+        <span className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
           Last 7 days
         </span>
       </div>
@@ -87,31 +82,29 @@ export default function RecentSignals() {
           <p>No signals in the last 7 days</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Date</th>
-                <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Ticker</th>
-                <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Pattern</th>
-                <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Source</th>
-                <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Price</th>
-                <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Vol Surge</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.signals.map((signal, idx) => (
-                <tr
-                  key={idx}
-                  className="border-b border-zinc-100 dark:border-zinc-700/50 hover:bg-zinc-50 dark:hover:bg-zinc-700/30"
-                >
-                  <td className="py-2 px-2 text-zinc-600 dark:text-zinc-300">
-                    {signal.date}
-                  </td>
-                  <td className="py-2 px-2 font-semibold text-zinc-900 dark:text-white">
-                    {signal.ticker}
-                  </td>
-                  <td className="py-2 px-2">
+        <>
+          {/* Mobile: Card Layout */}
+          <div className="sm:hidden space-y-3">
+            {data?.signals.map((signal, idx) => (
+              <div
+                key={idx}
+                className="p-3 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg border-l-4"
+                style={{
+                  borderLeftColor:
+                    signal.pattern === "피벗돌파"
+                      ? "#a855f7"
+                      : signal.pattern === "컵앤핸들"
+                      ? "#3b82f6"
+                      : signal.pattern === "Pivot Breakout"
+                      ? "#f97316"
+                      : "#22c55e",
+                }}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-bold text-zinc-900 dark:text-white">
+                      {signal.ticker}
+                    </span>
                     <span
                       className={`px-2 py-0.5 rounded text-xs font-medium text-white ${
                         PATTERN_COLORS[signal.pattern] || "bg-zinc-500"
@@ -119,27 +112,66 @@ export default function RecentSignals() {
                     >
                       {signal.pattern}
                     </span>
-                  </td>
-                  <td className="py-2 px-2">
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                        SOURCE_CONFIG[signal.source]?.color || "bg-zinc-100 text-zinc-600"
-                      }`}
-                    >
-                      {SOURCE_CONFIG[signal.source]?.label || signal.source}
-                    </span>
-                  </td>
-                  <td className="py-2 px-2 text-right text-zinc-600 dark:text-zinc-300">
+                  </div>
+                  <span className="text-base font-semibold text-zinc-900 dark:text-white">
                     ${signal.price.toFixed(2)}
-                  </td>
-                  <td className="py-2 px-2 text-right text-green-600 dark:text-green-400">
-                    {signal.volume_surge ? `+${signal.volume_surge.toFixed(0)}%` : "-"}
-                  </td>
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                  <span>{signal.date}</span>
+                  <span className="text-green-600 dark:text-green-400">
+                    {signal.volume_surge ? `Vol +${signal.volume_surge.toFixed(0)}%` : ""}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: Table Layout */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                  <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Date</th>
+                  <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Ticker</th>
+                  <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Pattern</th>
+                  <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Price</th>
+                  <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Vol Surge</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {data?.signals.map((signal, idx) => (
+                  <tr
+                    key={idx}
+                    className="border-b border-zinc-100 dark:border-zinc-700/50 hover:bg-zinc-50 dark:hover:bg-zinc-700/30"
+                  >
+                    <td className="py-2 px-2 text-zinc-600 dark:text-zinc-300">
+                      {signal.date}
+                    </td>
+                    <td className="py-2 px-2 font-semibold text-zinc-900 dark:text-white">
+                      {signal.ticker}
+                    </td>
+                    <td className="py-2 px-2">
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-medium text-white ${
+                          PATTERN_COLORS[signal.pattern] || "bg-zinc-500"
+                        }`}
+                      >
+                        {signal.pattern}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2 text-right text-zinc-600 dark:text-zinc-300">
+                      ${signal.price.toFixed(2)}
+                    </td>
+                    <td className="py-2 px-2 text-right text-green-600 dark:text-green-400">
+                      {signal.volume_surge ? `+${signal.volume_surge.toFixed(0)}%` : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

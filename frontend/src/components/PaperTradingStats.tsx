@@ -72,10 +72,10 @@ export default function PaperTradingStats() {
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
         <div>
-          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+          <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">
             Paper Trading Stats
           </h2>
           {stats.start_date && (
@@ -84,12 +84,53 @@ export default function PaperTradingStats() {
             </p>
           )}
         </div>
-        <span className="text-sm bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full">
+        <span className="text-xs sm:text-sm bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 px-2 sm:px-3 py-1 rounded-full">
           {stats.open_positions} Open
         </span>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      {/* Mobile: Grid Layout */}
+      <div className="grid grid-cols-2 gap-2 sm:hidden">
+        <StatCard label="Total Trades" value={stats.total_trades.toString()} />
+        <StatCard
+          label="Win Rate"
+          value={`${stats.win_rate}%`}
+          color={stats.win_rate >= 50 ? "green" : "red"}
+        />
+        <StatCard
+          label="Total Return"
+          value={`${stats.total_profit_pct >= 0 ? "+" : ""}${stats.total_profit_pct}%`}
+          color={stats.total_profit_pct >= 0 ? "green" : "red"}
+        />
+        <StatCard
+          label="Avg Profit"
+          value={`${stats.avg_profit_pct >= 0 ? "+" : ""}${stats.avg_profit_pct}%`}
+          color={stats.avg_profit_pct >= 0 ? "green" : "red"}
+        />
+        <StatCard
+          label="Winning"
+          value={stats.winning_trades.toString()}
+          color="green"
+        />
+        <StatCard
+          label="Losing"
+          value={stats.losing_trades.toString()}
+          color="red"
+        />
+        <StatCard
+          label="Avg Win"
+          value={`+${stats.avg_win_pct}%`}
+          color="green"
+        />
+        <StatCard
+          label="Avg Loss"
+          value={`${stats.avg_loss_pct}%`}
+          color="red"
+        />
+      </div>
+
+      {/* Desktop: Horizontal Scroll */}
+      <div className="hidden sm:flex gap-3 overflow-x-auto pb-2">
         <StatCard label="Total Trades" value={stats.total_trades.toString()} />
         <StatCard
           label="Win Rate"
@@ -148,9 +189,9 @@ function StatCard({
       : "text-zinc-900 dark:text-white";
 
   return (
-    <div className="bg-zinc-50 dark:bg-zinc-700/50 rounded-lg p-3 flex-shrink-0 min-w-[100px]">
+    <div className="bg-zinc-50 dark:bg-zinc-700/50 rounded-lg p-2 sm:p-3 flex-shrink-0 sm:min-w-[100px]">
       <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 whitespace-nowrap">{label}</p>
-      <p className={`text-xl font-bold ${colorClass}`}>{value}</p>
+      <p className={`text-lg sm:text-xl font-bold ${colorClass}`}>{value}</p>
     </div>
   );
 }

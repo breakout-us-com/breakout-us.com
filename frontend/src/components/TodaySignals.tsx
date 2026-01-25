@@ -31,11 +31,6 @@ const PATTERN_COLORS: Record<string, string> = {
   "Pivot Breakout": "bg-orange-500",
 };
 
-const SOURCE_CONFIG: Record<string, { label: string; color: string }> = {
-  oneil: { label: "O'Neil", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300" },
-  dynamic: { label: "Dynamic", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300" },
-};
-
 function formatLastScan(isoString: string | null): string {
   if (!isoString) return "-";
   const date = new Date(isoString);
@@ -99,13 +94,13 @@ export default function TodaySignals() {
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
         <div>
-          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+          <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">
             Today&apos;s Signals
             {data?.date && (
-              <span className="text-base font-normal text-zinc-500 dark:text-zinc-400 ml-2">
+              <span className="text-sm sm:text-base font-normal text-zinc-500 dark:text-zinc-400 ml-2">
                 ({data.date})
               </span>
             )}
@@ -170,20 +165,22 @@ export default function TodaySignals() {
           {data?.signals.map((signal, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg border-l-4"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg border-l-4"
               style={{
                 borderLeftColor:
                   signal.pattern === "피벗돌파"
                     ? "#a855f7"
                     : signal.pattern === "컵앤핸들"
                     ? "#3b82f6"
+                    : signal.pattern === "Pivot Breakout"
+                    ? "#f97316"
                     : "#22c55e",
               }}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-start sm:items-center gap-3 sm:gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-zinc-900 dark:text-white">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">
                       {signal.ticker}
                     </span>
                     <span
@@ -193,15 +190,8 @@ export default function TodaySignals() {
                     >
                       {signal.pattern}
                     </span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                        SOURCE_CONFIG[signal.source]?.color || "bg-zinc-100 text-zinc-600"
-                      }`}
-                    >
-                      {SOURCE_CONFIG[signal.source]?.label || signal.source}
-                    </span>
                   </div>
-                  <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                  <div className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
                     {signal.time && <span>{signal.time} KST</span>}
                     {signal.volume_surge && (
                       <span className="ml-2">
@@ -211,12 +201,12 @@ export default function TodaySignals() {
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-lg font-semibold text-zinc-900 dark:text-white">
+              <div className="text-left sm:text-right mt-2 sm:mt-0">
+                <div className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white">
                   ${signal.price.toFixed(2)}
                 </div>
                 {signal.breakout_pct && (
-                  <div className="text-sm text-green-600 dark:text-green-400">
+                  <div className="text-xs sm:text-sm text-green-600 dark:text-green-400">
                     +{signal.breakout_pct.toFixed(2)}% breakout
                   </div>
                 )}

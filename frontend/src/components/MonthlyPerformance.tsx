@@ -56,15 +56,15 @@ export default function MonthlyPerformance() {
   const totalProfit = data?.monthly.reduce((sum, m) => sum + m.total_profit_pct, 0) || 0;
 
   return (
-    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+        <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">
           Monthly Performance
         </h2>
         <div className="text-right">
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">Total</span>
+          <span className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">Total</span>
           <span
-            className={`ml-2 text-lg font-bold ${
+            className={`ml-1 sm:ml-2 text-base sm:text-lg font-bold ${
               totalProfit >= 0
                 ? "text-green-600 dark:text-green-400"
                 : "text-red-600 dark:text-red-400"
@@ -89,9 +89,47 @@ export default function MonthlyPerformance() {
           {data?.monthly.map((month) => (
             <div
               key={month.month}
-              className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg"
             >
-              <div className="flex items-center gap-4">
+              {/* Mobile Layout */}
+              <div className="sm:hidden">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-zinc-900 dark:text-white">
+                    {month.month}
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      month.total_profit_pct >= 0
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {month.total_profit_pct >= 0 ? "+" : ""}
+                    {month.total_profit_pct.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                  <span>{month.trades} trades</span>
+                  <span>
+                    <span className="text-green-600 dark:text-green-400">{month.wins}W</span>
+                    {" / "}
+                    <span className="text-red-600 dark:text-red-400">{month.losses}L</span>
+                    {" · "}
+                    <span
+                      className={
+                        month.win_rate >= 50
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }
+                    >
+                      {month.win_rate.toFixed(0)}% WR
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop Layout */}
+              <div className="hidden sm:flex items-center gap-4">
                 <span className="font-medium text-zinc-900 dark:text-white w-20">
                   {month.month}
                 </span>
@@ -104,7 +142,7 @@ export default function MonthlyPerformance() {
                   <span className="text-red-600 dark:text-red-400">{month.losses}L</span>
                 </span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-4">
                 <span
                   className={`text-sm ${
                     month.win_rate >= 50

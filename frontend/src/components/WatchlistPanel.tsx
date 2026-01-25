@@ -79,19 +79,21 @@ export default function WatchlistPanel() {
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4">
+    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-3 sm:p-4">
       {/* Header with Tabs inline */}
-      <div className="flex flex-wrap items-center gap-3 mb-3">
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">
-          Monitoring Stocks
-        </h2>
-        <span className="text-xs bg-zinc-100 dark:bg-zinc-700 px-2 py-0.5 rounded-full text-zinc-600 dark:text-zinc-300">
-          {data?.total} total
-        </span>
-        <div className="flex gap-1.5 ml-auto">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 mb-3">
+        <div className="flex items-center justify-between sm:justify-start gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">
+            Monitoring Stocks
+          </h2>
+          <span className="text-xs bg-zinc-100 dark:bg-zinc-700 px-2 py-0.5 rounded-full text-zinc-600 dark:text-zinc-300">
+            {data?.total} total
+          </span>
+        </div>
+        <div className="flex gap-1.5 sm:ml-auto">
           <button
             onClick={() => setActiveTab("fixed")}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`flex-1 sm:flex-none px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
               activeTab === "fixed"
                 ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300"
                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600"
@@ -101,7 +103,7 @@ export default function WatchlistPanel() {
           </button>
           <button
             onClick={() => setActiveTab("dynamic")}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`flex-1 sm:flex-none px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
               activeTab === "dynamic"
                 ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600"

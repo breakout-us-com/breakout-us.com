@@ -85,23 +85,23 @@ export default function CurrentPositions() {
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
+        <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">
           Open Positions
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {data && data.total_pnl_pct !== undefined && (
-            <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+            <span className={`text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full ${
               data.total_pnl_pct >= 0
                 ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
                 : "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
             }`}>
               {data.total_pnl_pct >= 0 ? "+" : ""}{data.total_pnl_pct.toFixed(2)}%
-              {" "}(${data.total_pnl_amount >= 0 ? "+" : ""}{data.total_pnl_amount.toLocaleString()})
+              <span className="hidden sm:inline"> (${data.total_pnl_amount >= 0 ? "+" : ""}{data.total_pnl_amount.toLocaleString()})</span>
             </span>
           )}
-          <span className="text-sm bg-zinc-100 dark:bg-zinc-700 px-3 py-1 rounded-full text-zinc-600 dark:text-zinc-300">
+          <span className="text-xs sm:text-sm bg-zinc-100 dark:bg-zinc-700 px-2 sm:px-3 py-1 rounded-full text-zinc-600 dark:text-zinc-300">
             {data?.count || 0} positions
           </span>
         </div>
@@ -116,35 +116,24 @@ export default function CurrentPositions() {
           <p>No open positions</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Ticker</th>
-                <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Entry</th>
-                <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Current</th>
-                <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">P&L</th>
-                <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Stop</th>
-                <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Target</th>
-                <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Days</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.positions.map((pos) => (
-                <tr
-                  key={pos.id}
-                  className="border-b border-zinc-100 dark:border-zinc-700/50"
-                >
-                  <td className="py-2 px-2 font-semibold text-zinc-900 dark:text-white">
+        <>
+          {/* Mobile: Card Layout */}
+          <div className="sm:hidden space-y-3">
+            {data?.positions.map((pos) => (
+              <div
+                key={pos.id}
+                className="p-3 bg-zinc-50 dark:bg-zinc-700/50 rounded-lg border-l-4"
+                style={{
+                  borderLeftColor: pos.pnl_pct !== null
+                    ? pos.pnl_pct >= 0 ? "#22c55e" : "#ef4444"
+                    : "#a1a1aa"
+                }}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-base font-bold text-zinc-900 dark:text-white">
                     {pos.ticker}
-                  </td>
-                  <td className="py-2 px-2 text-right text-zinc-600 dark:text-zinc-300">
-                    ${pos.entry_price.toFixed(2)}
-                  </td>
-                  <td className="py-2 px-2 text-right text-zinc-600 dark:text-zinc-300">
-                    {pos.current_price ? `$${pos.current_price.toFixed(2)}` : "-"}
-                  </td>
-                  <td className={`py-2 px-2 text-right font-semibold ${
+                  </span>
+                  <span className={`text-base font-semibold ${
                     pos.pnl_pct !== null
                       ? pos.pnl_pct >= 0
                         ? "text-green-600 dark:text-green-400"
@@ -154,21 +143,94 @@ export default function CurrentPositions() {
                     {pos.pnl_pct !== null
                       ? `${pos.pnl_pct >= 0 ? "+" : ""}${pos.pnl_pct.toFixed(2)}%`
                       : "-"}
-                  </td>
-                  <td className="py-2 px-2 text-right text-red-600 dark:text-red-400 text-xs">
-                    {pos.stop_loss ? `$${pos.stop_loss.toFixed(0)}` : "-"}
-                  </td>
-                  <td className="py-2 px-2 text-right text-green-600 dark:text-green-400 text-xs">
-                    {pos.take_profit ? `$${pos.take_profit.toFixed(0)}` : "-"}
-                  </td>
-                  <td className="py-2 px-2 text-right text-zinc-500 dark:text-zinc-400">
-                    {pos.holding_days}d
-                  </td>
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500 dark:text-zinc-400">Entry</span>
+                    <span className="text-zinc-700 dark:text-zinc-300">${pos.entry_price.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500 dark:text-zinc-400">Current</span>
+                    <span className="text-zinc-700 dark:text-zinc-300">
+                      {pos.current_price ? `$${pos.current_price.toFixed(2)}` : "-"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500 dark:text-zinc-400">Stop</span>
+                    <span className="text-red-600 dark:text-red-400">
+                      {pos.stop_loss ? `$${pos.stop_loss.toFixed(0)}` : "-"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500 dark:text-zinc-400">Target</span>
+                    <span className="text-green-600 dark:text-green-400">
+                      {pos.take_profit ? `$${pos.take_profit.toFixed(0)}` : "-"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 text-right">
+                  {pos.holding_days}일 보유
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: Table Layout */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                  <th className="text-left py-2 px-2 text-zinc-500 dark:text-zinc-400">Ticker</th>
+                  <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Entry</th>
+                  <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Current</th>
+                  <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">P&L</th>
+                  <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Stop</th>
+                  <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Target</th>
+                  <th className="text-right py-2 px-2 text-zinc-500 dark:text-zinc-400">Days</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {data?.positions.map((pos) => (
+                  <tr
+                    key={pos.id}
+                    className="border-b border-zinc-100 dark:border-zinc-700/50"
+                  >
+                    <td className="py-2 px-2 font-semibold text-zinc-900 dark:text-white">
+                      {pos.ticker}
+                    </td>
+                    <td className="py-2 px-2 text-right text-zinc-600 dark:text-zinc-300">
+                      ${pos.entry_price.toFixed(2)}
+                    </td>
+                    <td className="py-2 px-2 text-right text-zinc-600 dark:text-zinc-300">
+                      {pos.current_price ? `$${pos.current_price.toFixed(2)}` : "-"}
+                    </td>
+                    <td className={`py-2 px-2 text-right font-semibold ${
+                      pos.pnl_pct !== null
+                        ? pos.pnl_pct >= 0
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                        : "text-zinc-400"
+                    }`}>
+                      {pos.pnl_pct !== null
+                        ? `${pos.pnl_pct >= 0 ? "+" : ""}${pos.pnl_pct.toFixed(2)}%`
+                        : "-"}
+                    </td>
+                    <td className="py-2 px-2 text-right text-red-600 dark:text-red-400 text-xs">
+                      {pos.stop_loss ? `$${pos.stop_loss.toFixed(0)}` : "-"}
+                    </td>
+                    <td className="py-2 px-2 text-right text-green-600 dark:text-green-400 text-xs">
+                      {pos.take_profit ? `$${pos.take_profit.toFixed(0)}` : "-"}
+                    </td>
+                    <td className="py-2 px-2 text-right text-zinc-500 dark:text-zinc-400">
+                      {pos.holding_days}d
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

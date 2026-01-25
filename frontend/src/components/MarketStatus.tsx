@@ -123,22 +123,33 @@ export default function MarketStatus() {
   }, []);
 
   const sessions: MarketSession[] = ["daymarket", "premarket", "regular", "afterhours"];
+  const config = SESSION_CONFIG[currentSession];
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2">
       {/* 현재 시간 */}
-      <div className="text-sm text-zinc-500 dark:text-zinc-400 mr-2">
+      <div className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 sm:mr-2">
         <span className="font-medium">{etTime}</span>
-        <span className="text-xs ml-1">미국 동부</span>
+        <span className="text-xs ml-1">ET</span>
         <span className="mx-1">·</span>
         <span className="font-medium">{kstTime}</span>
-        <span className="text-xs ml-1">한국</span>
+        <span className="text-xs ml-1">KST</span>
       </div>
 
-      {/* 세션 표시 */}
-      <div className="flex items-center gap-1">
+      {/* Mobile: 현재 세션만 표시 */}
+      <div className="sm:hidden">
+        <div
+          className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border ${config.bgColor}`}
+        >
+          <div className={`w-1.5 h-1.5 rounded-full ${config.dotColor} animate-pulse`} />
+          <span className={config.color}>{config.labelKo}</span>
+        </div>
+      </div>
+
+      {/* Desktop: 모든 세션 표시 */}
+      <div className="hidden sm:flex items-center gap-1">
         {sessions.map((session) => {
-          const config = SESSION_CONFIG[session];
+          const sessionConfig = SESSION_CONFIG[session];
           const isActive = currentSession === session;
 
           return (
@@ -146,18 +157,18 @@ export default function MarketStatus() {
               key={session}
               className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs border transition-all ${
                 isActive
-                  ? config.bgColor
+                  ? sessionConfig.bgColor
                   : "bg-transparent border-transparent opacity-50"
               }`}
-              title={`${config.label}: ${config.timeKST} KST`}
+              title={`${sessionConfig.label}: ${sessionConfig.timeKST} KST`}
             >
               <div
-                className={`w-1.5 h-1.5 rounded-full ${config.dotColor} ${
+                className={`w-1.5 h-1.5 rounded-full ${sessionConfig.dotColor} ${
                   isActive ? "animate-pulse" : ""
                 }`}
               />
-              <span className={isActive ? config.color : "text-zinc-400 dark:text-zinc-500"}>
-                {config.labelKo}
+              <span className={isActive ? sessionConfig.color : "text-zinc-400 dark:text-zinc-500"}>
+                {sessionConfig.labelKo}
               </span>
             </div>
           );
