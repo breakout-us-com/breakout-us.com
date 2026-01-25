@@ -241,7 +241,7 @@ async def get_trading_stats():
                     COALESCE(AVG(CASE WHEN profit_pct <= 0 THEN profit_pct END), 0) as avg_loss,
                     COALESCE(MAX(profit_pct), 0) as max_profit,
                     COALESCE(MIN(profit_pct), 0) as max_loss,
-                    COALESCE(SUM(profit_pct), 0) as total_profit
+                    COALESCE(SUM(investment_amount * profit_pct / 100), 0) as total_profit_amount
                 FROM positions
                 WHERE status = 'closed'
             """)
@@ -286,6 +286,10 @@ async def get_trading_stats():
             if start_date:
                 trading_days = (datetime.now() - start_date).days
 
+            # Calculate portfolio return (realized P&L / initial capital)
+            total_profit_amount = float(closed_stats['total_profit_amount'] or 0)
+            portfolio_return_pct = (total_profit_amount / INITIAL_CAPITAL) * 100
+
             return {
                 # Trading period
                 "start_date": start_date.strftime("%Y-%m-%d") if start_date else None,
@@ -308,7 +312,8 @@ async def get_trading_stats():
                 "avg_loss_pct": round(float(closed_stats['avg_loss'] or 0), 2),
                 "max_profit_pct": round(float(closed_stats['max_profit'] or 0), 2),
                 "max_loss_pct": round(float(closed_stats['max_loss'] or 0), 2),
-                "total_profit_pct": round(float(closed_stats['total_profit'] or 0), 2),
+                "total_profit_pct": round(portfolio_return_pct, 2),
+                "total_profit_amount": round(total_profit_amount, 2),
             }
 
         except Exception as e:
@@ -317,7 +322,7 @@ async def get_trading_stats():
 
 @router.get("/paper-trading/monthly")
 async def get_monthly_performance():
-    """월간 수익률"""
+    """월간 수익률 (포트폴리오 수익률 기준)"""
     with get_cursor() as cursor:
         if cursor is None:
             return {"monthly": [], "error": "Database not connected"}
@@ -328,7 +333,7 @@ async def get_monthly_performance():
                     TO_CHAR(exit_date, 'YYYY-MM') as month,
                     COUNT(*) as trades,
                     COUNT(CASE WHEN profit_pct > 0 THEN 1 END) as wins,
-                    COALESCE(SUM(profit_pct), 0) as total_profit,
+                    COALESCE(SUM(investment_amount * profit_pct / 100), 0) as total_profit_amount,
                     COALESCE(AVG(profit_pct), 0) as avg_profit
                 FROM positions
                 WHERE status = 'closed' AND exit_date IS NOT NULL
@@ -342,13 +347,17 @@ async def get_monthly_performance():
             for r in results:
                 trades = r['trades'] or 0
                 wins = r['wins'] or 0
+                # Calculate monthly portfolio return (realized P&L / initial capital)
+                total_profit_amount = float(r['total_profit_amount'] or 0)
+                portfolio_return_pct = (total_profit_amount / INITIAL_CAPITAL) * 100
                 monthly.append({
                     "month": r['month'],
                     "trades": trades,
                     "wins": wins,
                     "losses": trades - wins,
                     "win_rate": round((wins / trades * 100), 2) if trades > 0 else 0,
-                    "total_profit_pct": round(float(r['total_profit'] or 0), 2),
+                    "total_profit_pct": round(portfolio_return_pct, 2),
+                    "total_profit_amount": round(total_profit_amount, 2),
                     "avg_profit_pct": round(float(r['avg_profit'] or 0), 2),
                 })
 

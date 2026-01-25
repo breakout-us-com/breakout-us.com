@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "postgres-user-db": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://pinkspider:0SrmPhyj9hqj2BXZDqrB@localhost:5433/breakout_us_db"
+      ]
+    }
+  }
+}
