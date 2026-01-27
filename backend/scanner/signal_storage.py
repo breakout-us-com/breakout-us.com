@@ -249,12 +249,15 @@ def save_position(
             investment_amount = available_capital
             quantity = investment_amount / safe_price
 
+            # Use ON CONFLICT to prevent race condition duplicates
+            # The partial unique index (ticker WHERE status='open') ensures atomicity
             cursor.execute("""
                 INSERT INTO positions (
                     ticker, market, source, entry_price, quantity, investment_amount,
                     pattern, stop_loss, take_profit, signal_data, status
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'open')
+                ON CONFLICT (ticker) WHERE status = 'open' DO NOTHING
                 RETURNING id
             """, (
                 ticker,

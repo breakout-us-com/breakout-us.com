@@ -79,11 +79,14 @@ Custom `KSTTimedRotatingFileHandler` in `logging_config.py` handles this.
 ## Environment Variables
 
 ### Backend (.env)
-- `USE_SSH_TUNNEL` - true for local dev with SSH tunnel
+- `USE_SSH_TUNNEL` - SSH tunnel for DB (default: true, set false for direct connection)
 - `DB_HOST/PORT/NAME/USER/PASSWORD` - PostgreSQL connection
+- `SSH_HOST/PORT/USER/KEY_PATH` - SSH tunnel settings (required if USE_SSH_TUNNEL=true)
 - `SCANNER_ENABLED` - Enable background scanner
 - `MIN_VOLUME_SURGE` - Volume surge threshold (default 50%)
 - `MAX_BREAKOUT_PCT` - Max breakout % from resistance (default 5%)
+- `INITIAL_CAPITAL` - Paper trading initial capital (default: $100,000)
+- `POSITION_SIZE_PCT` - Position size as % of capital (default: 20%)
 
 ### Frontend (.env.local / .env.production)
 - `NEXT_PUBLIC_API_URL` - Backend API URL
@@ -102,9 +105,20 @@ Required GitHub Secrets: `SSH_PRIVATE_KEY`, `SERVER_IP`, `SERVER_USER`
 | GET `/api/watchlist` | Combined watchlist |
 | GET `/api/signals/today` | Today's breakout signals |
 | GET `/api/signals/recent?days=7` | Recent N days signals |
-| GET `/api/paper-trading/positions` | Open positions |
+| GET `/api/paper-trading/positions` | Open positions with unrealized P&L |
+| GET `/api/paper-trading/closed` | Closed positions (trading history) |
 | GET `/api/paper-trading/stats` | Trading statistics |
+| GET `/api/paper-trading/monthly` | Monthly performance |
 | GET `/health` | Health check |
+
+## Portfolio Return Calculation
+
+Returns are calculated as **portfolio return** (not sum of trade percentages):
+```
+Realized P&L = investment_amount × profit_pct / 100
+Portfolio Return = Total Realized P&L / INITIAL_CAPITAL × 100
+```
+Example: 5 trades × $20,000 × +10% avg = $10,000 profit → **+10%** portfolio return
 
 ## Notes
 

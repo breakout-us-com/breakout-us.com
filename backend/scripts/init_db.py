@@ -114,6 +114,12 @@ def main():
             cur.execute("CREATE INDEX IF NOT EXISTS idx_positions_source ON positions(source)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_positions_entry_date ON positions(entry_date)")
 
+            # CRITICAL: Prevent duplicate open positions for same ticker
+            cur.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_positions_ticker_open
+                ON positions(ticker) WHERE status = 'open'
+            """)
+
             # alerts 테이블 (시그널 기록용)
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS alerts (
