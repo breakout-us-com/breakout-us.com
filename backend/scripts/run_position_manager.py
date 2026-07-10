@@ -37,7 +37,7 @@ def get_open_positions() -> list:
         try:
             cursor.execute("""
                 SELECT id, ticker, market, source, entry_price, entry_date,
-                       pattern, stop_loss, take_profit, signal_data
+                       investment_amount, pattern, stop_loss, take_profit, signal_data
                 FROM positions
                 WHERE status = 'open'
                 ORDER BY entry_date
@@ -53,6 +53,7 @@ def close_position(
     exit_price: float,
     exit_reason: str,
     profit_pct: float,
+    profit_amount: float,
     holding_days: int
 ) -> bool:
     """Close a position with exit details."""
@@ -69,6 +70,7 @@ def close_position(
                     exit_date = CURRENT_TIMESTAMP,
                     exit_reason = %s,
                     profit_pct = %s,
+                    profit_amount = %s,
                     holding_days = %s,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s
@@ -76,10 +78,10 @@ def close_position(
                 float(exit_price),
                 str(exit_reason),
                 float(profit_pct),
+                float(profit_amount),
                 int(holding_days),
                 int(position_id)
             ))
-            cursor.connection.commit()
             return True
         except Exception as e:
             print(f"❌ Failed to close position: {e}")
@@ -95,8 +97,11 @@ def check_exit_conditions(
     """
     Check if position should be closed.
 
+    exit_reason은 프론트엔드 뱃지와 매칭되는 코드 사용: stop_loss / take_profit / max_hold
+
     Returns:
-        (exit_reason, profit_pct) or (None, None) if should stay open
+        (exit_reason, exit_price, profit_pct, holding_days)
+        - 유지 시 (None, None, None, holding_days)
     """
     entry_price = float(position['entry_price'])
     stop_loss = float(position['stop_loss']) if position['stop_loss'] else entry_price * 0.92
@@ -111,20 +116,21 @@ def check_exit_conditions(
     # Check low price for stop loss (intraday stop)
     check_price = min(current_price, low_price) if low_price else current_price
 
-    # Stop Loss check
+    # Stop Loss check - 장중 저가가 손절가에 닿으면 손절가로 체결 처리
     if check_price <= stop_loss:
-        loss_pct = ((check_price - entry_price) / entry_price) * 100
-        return "Stop Loss (-8%)", round(loss_pct, 2), holding_days
+        exit_price = min(stop_loss, current_price)
+        loss_pct = ((exit_price - entry_price) / entry_price) * 100
+        return "stop_loss", exit_price, round(loss_pct, 2), holding_days
 
     # Take Profit check
     if current_price >= take_profit:
-        return "Take Profit (+20%)", round(profit_pct, 2), holding_days
+        return "take_profit", current_price, round(profit_pct, 2), holding_days
 
     # Max Holding Period check
     if holding_days >= max_holding_days:
-        return f"Max Holding ({max_holding_days} days)", round(profit_pct, 2), holding_days
+        return "max_hold", current_price, round(profit_pct, 2), holding_days
 
-    return None, None, holding_days
+    return None, None, None, holding_days
 
 
 def run_position_check():
@@ -170,15 +176,19 @@ def run_position_check():
             continue
 
         # Check exit conditions
-        exit_reason, profit_pct, holding_days = check_exit_conditions(
+        exit_reason, exit_price, profit_pct, holding_days = check_exit_conditions(
             pos, current_price, low_price, max_holding_days
         )
 
         if exit_reason:
+            # 실현 손익 금액 (투자금 × 수익률)
+            investment_amount = float(pos['investment_amount']) if pos.get('investment_amount') else 0
+            profit_amount = investment_amount * profit_pct / 100
+
             # Close position
-            if close_position(pos['id'], current_price, exit_reason, profit_pct, holding_days):
+            if close_position(pos['id'], exit_price, exit_reason, profit_pct, profit_amount, holding_days):
                 emoji = "🟢" if profit_pct > 0 else "🔴"
-                print(f"      {emoji} CLOSED: {exit_reason} ({profit_pct:+.2f}%)")
+                print(f"      {emoji} CLOSED: {exit_reason} @ ${exit_price:.2f} ({profit_pct:+.2f}%, ${profit_amount:+,.0f})")
                 closed_count += 1
             else:
                 print(f"      ❌ Failed to close position")

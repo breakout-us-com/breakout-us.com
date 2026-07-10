@@ -25,7 +25,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from detector import BreakoutDetector
 from routers.db import get_cursor
-from routers.watchlist import FIXED_WATCHLIST
+from routers.watchlist import ONEIL_WATCHLIST
+
+# 고정 워치리스트 (섹터별 dict를 평탄화)
+FIXED_WATCHLIST = sorted({t for stocks in ONEIL_WATCHLIST.values() for t in stocks})
 
 
 def load_dynamic_watchlist() -> list:
@@ -183,12 +186,14 @@ def save_position_to_db(signal: dict, source: str) -> bool:
             investment_amount = available_capital
             quantity = investment_amount / entry_price
 
+            # 부분 유니크 인덱스(idx_positions_ticker_open)로 중복 오픈 포지션 방지
             cursor.execute("""
                 INSERT INTO positions (
                     ticker, market, source, entry_price, quantity, investment_amount,
                     pattern, stop_loss, take_profit, signal_data, status
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'open')
+                ON CONFLICT (ticker) WHERE status = 'open' DO NOTHING
                 RETURNING id
             """, (
                 signal['ticker'],
@@ -206,7 +211,10 @@ def save_position_to_db(signal: dict, source: str) -> bool:
                     'resistance': signal.get('resistance'),
                 })
             ))
-            cursor.connection.commit()
+            result = cursor.fetchone()
+            if result is None:
+                print(f"   ⏭️  Position exists (conflict): {signal['ticker']}")
+                return False
             print(f"   💰 Invested ${investment_amount:,.0f} ({quantity:.2f} shares)")
             return True
         except Exception as e:

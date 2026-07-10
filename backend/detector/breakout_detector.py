@@ -5,12 +5,29 @@ Detects pivot point breakout signals in US stock data.
 """
 
 import time
+from datetime import datetime
 from typing import Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 
 from screener.dynamic_screener import USStockProvider
+
+US_EASTERN = ZoneInfo("America/New_York")
+
+
+def is_data_fresh(df: pd.DataFrame) -> bool:
+    """마지막 봉이 미국 동부 기준 오늘 날짜인지 확인.
+
+    휴장일(공휴일/주말)에는 yfinance가 직전 거래일 데이터를 반환하므로,
+    스테일 데이터로 같은 시그널이 반복 감지되는 것을 방지한다.
+    """
+    if df is None or len(df) == 0:
+        return False
+    last_bar_date = pd.Timestamp(df.index[-1]).date()
+    today_et = datetime.now(US_EASTERN).date()
+    return last_bar_date == today_et
 
 
 class BreakoutDetector:
@@ -65,7 +82,7 @@ class BreakoutDetector:
             # Price analysis
             close = recent['Close'].values
             current_price = close[-1]
-            resistance = np.max(close[-20:-1])  # 20-day high excluding today
+            resistance = np.max(close[-21:-1])  # 오늘 제외 직전 20일 고점
 
             # Breakout conditions
             breakout = current_price > resistance
@@ -103,6 +120,10 @@ class BreakoutDetector:
         """
         df = USStockProvider.get_stock_data(ticker, period='3mo')
         if df is None:
+            return []
+
+        # 휴장일 스테일 데이터 가드
+        if not is_data_fresh(df):
             return []
 
         signals = []

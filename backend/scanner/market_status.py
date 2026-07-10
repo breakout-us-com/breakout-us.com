@@ -32,23 +32,14 @@ def get_market_status() -> MarketStatus:
     us_open_night = dt_time(22, 0)
     us_close_morning = dt_time(7, 0)
 
+    # KST 기준 미국장 매핑:
+    # - 밤 세션 (22:00-23:59): 월-금만 유효 (당일 ET 장 시작)
+    # - 새벽 세션 (00:00-07:00): 화-토만 유효 (전날 ET 장 마감)
+    # - 일요일 밤 / 월요일 새벽은 ET 기준 일요일이므로 휴장
     is_open = False
-    if not is_weekend:
-        # Night session (22:00 - 23:59)
-        if current_time >= us_open_night:
-            is_open = True
-        # Morning session (00:00 - 07:00)
-        elif current_time <= us_close_morning:
-            # Check if previous day was not Sunday (weekday would be 0 for Monday morning)
-            # Monday 00:00-07:00 is valid (Sunday night trading)
-            is_open = True
-
-    # Special case: Sunday night after 22:00 is Monday's trading
-    if weekday == 6 and current_time >= us_open_night:
+    if weekday <= 4 and current_time >= us_open_night:
         is_open = True
-
-    # Saturday morning before 07:00 is Friday's trading end
-    if weekday == 5 and current_time <= us_close_morning:
+    elif 1 <= weekday <= 5 and current_time <= us_close_morning:
         is_open = True
 
     return {

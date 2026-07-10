@@ -21,6 +21,9 @@ MAX_POSITIONS = int(os.getenv('MAX_POSITIONS', '5'))
 STOP_LOSS_PCT = float(os.getenv('STOP_LOSS_PCT', '0.08'))
 TAKE_PROFIT_PCT = float(os.getenv('TAKE_PROFIT_PCT', '0.20'))
 
+# 같은 티커 재알림 쿨다운 (일)
+ALERT_COOLDOWN_DAYS = int(os.getenv('ALERT_COOLDOWN_DAYS', '7'))
+
 
 def _convert_numpy_types(obj: Any) -> Any:
     """Convert numpy types to Python native types for DB/JSON compatibility."""
@@ -151,6 +154,31 @@ def get_today_signal_count() -> int:
             return 0
 
 
+def has_recent_alert(ticker: str, pattern: str, days: int = ALERT_COOLDOWN_DAYS) -> bool:
+    """
+    최근 N일 내에 같은 티커/패턴 알림이 있었는지 확인 (소스 무관).
+
+    연속 거래일에 같은 종목이 매일 재알림되는 노이즈를 방지한다.
+    """
+    with get_cursor() as cursor:
+        if cursor is None:
+            return False
+
+        try:
+            cursor.execute("""
+                SELECT 1 FROM alerts
+                WHERE ticker = %s AND pattern = %s
+                  AND alert_date > CURRENT_DATE - %s
+                LIMIT 1
+            """, (ticker, pattern, days))
+
+            return cursor.fetchone() is not None
+
+        except Exception as e:
+            logger.error(f"Error checking recent alert for {ticker}: {e}")
+            return False
+
+
 def has_open_position(ticker: str) -> bool:
     """Check if there's already an open position for the ticker."""
     with get_cursor() as cursor:
@@ -188,7 +216,7 @@ def get_available_capital() -> float:
 
             # Check max positions limit
             if position_count >= MAX_POSITIONS:
-                logger.debug(f"Max positions reached: {position_count}/{MAX_POSITIONS}")
+                logger.info(f"Max positions reached: {position_count}/{MAX_POSITIONS}")
                 return 0
 
             # Calculate available capital
@@ -226,13 +254,13 @@ def save_position(
     """
     # Skip if already has open position
     if has_open_position(ticker):
-        logger.debug(f"Position already exists for {ticker}")
+        logger.info(f"Position skipped (already open): {ticker}")
         return False
 
     # Check available capital
     available_capital = get_available_capital()
     if available_capital <= 0:
-        logger.debug(f"No capital available for {ticker}")
+        logger.info(f"Position skipped (no capital / max positions): {ticker}")
         return False
 
     with get_cursor() as cursor:

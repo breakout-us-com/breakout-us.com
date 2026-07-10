@@ -173,6 +173,20 @@ async def get_closed_positions(limit: int = 50):
             return {"trades": [], "count": 0, "error": "Database not connected"}
 
         try:
+            # 전체 청산 내역 기준 통계 (LIMIT과 무관하게 전체 집계)
+            cursor.execute("""
+                SELECT
+                    COUNT(CASE WHEN profit_pct > 0 THEN 1 END) as win_count,
+                    COUNT(CASE WHEN profit_pct <= 0 THEN 1 END) as loss_count,
+                    COALESCE(SUM(COALESCE(investment_amount, %s) * profit_pct / 100), 0) as total_profit_amount
+                FROM positions
+                WHERE status = 'closed'
+            """, (INITIAL_CAPITAL * POSITION_SIZE_PCT,))
+            agg = cursor.fetchone()
+            win_count = agg['win_count'] or 0
+            loss_count = agg['loss_count'] or 0
+            total_profit_amount = float(agg['total_profit_amount'] or 0)
+
             cursor.execute("""
                 SELECT id, ticker, market, source, entry_price, entry_date, pattern,
                        exit_price, exit_date, exit_reason, profit_pct, holding_days,
@@ -185,9 +199,6 @@ async def get_closed_positions(limit: int = 50):
             results = cursor.fetchall()
 
             trades = []
-            total_profit_amount = 0
-            win_count = 0
-            loss_count = 0
 
             for r in results:
                 entry_date = r['entry_date']
@@ -200,12 +211,6 @@ async def get_closed_positions(limit: int = 50):
 
                 # Calculate realized profit amount
                 profit_amount = investment_amount * profit_pct / 100
-                total_profit_amount += profit_amount
-
-                if profit_pct > 0:
-                    win_count += 1
-                else:
-                    loss_count += 1
 
                 trades.append({
                     "id": r['id'],

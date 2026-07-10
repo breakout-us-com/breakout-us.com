@@ -16,7 +16,7 @@ from routers.db import get_db_connection, is_connected
 from logging_config import setup_logging
 
 from .market_status import get_market_status, format_market_status_message
-from .signal_storage import save_signal, save_position, has_alert_today, get_today_signal_count
+from .signal_storage import save_signal, save_position, has_recent_alert, get_today_signal_count
 
 # Configure logging with file rotation
 logger = setup_logging("scanner")
@@ -35,7 +35,10 @@ class BackgroundScanner:
     """Background service for periodic breakout scanning and dynamic screening."""
 
     def __init__(self):
-        self.detector = BreakoutDetector()
+        self.detector = BreakoutDetector(
+            min_volume_surge=float(os.getenv('MIN_VOLUME_SURGE', '50.0')),
+            max_breakout_pct=float(os.getenv('MAX_BREAKOUT_PCT', '5.0'))
+        )
         self.screener = DynamicScreener()
         self._running = False
         self._scan_task: Optional[asyncio.Task] = None
@@ -109,8 +112,8 @@ class BackgroundScanner:
 
         for ticker in tickers:
             try:
-                # Check for duplicate before analysis (save API calls)
-                if has_alert_today(ticker, "Pivot Breakout"):
+                # 쿨다운 내 재알림 방지 (분석 전에 체크해서 API 호출 절약)
+                if has_recent_alert(ticker, "Pivot Breakout"):
                     skipped += 1
                     continue
 
